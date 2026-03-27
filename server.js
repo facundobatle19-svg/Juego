@@ -8,7 +8,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const USERS_FILE = path.join(__dirname, "users.json");
 const words = ["Gato", "Perro", "Pizza", "Messi", "Computadora", "Avión", "Mate", "Cine", "Fútbol", "Asado"];
 
