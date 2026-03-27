@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostor Game</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: white; text-align: center; }
+        .container { max-width: 500px; margin: 50px auto; background: #333; padding: 20px; border-radius: 15px; }
+        .character { width: 80px; height: 80px; cursor: pointer; border-radius: 50%; border: 3px solid transparent; object-fit: cover; margin: 5px; }
+        .selected { border-color: gold; transform: scale(1.1); }
+        .lobby-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid gold; margin: 10px auto; object-fit: cover; }
+        button { padding: 10px 20px; cursor: pointer; background: gold; border: none; font-weight: bold; border-radius: 5px; margin: 5px; }
+        #wordDisplay { font-size: 1.5rem; margin: 20px; padding: 20px; border: 2px dashed gold; display: none; background: #444; }
+        #usersList { background: #444; padding: 10px; border-radius: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="app" class="container"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const app = document.getElementById("app");
+        let username = localStorage.getItem("username");
+        
+        const characterGifs = {
+            "Peron": "https://i.giphy.com/KbAj5yM9zzZRvX0YBn.webp",
+            "Milei": "https://media.tenor.com/Wcpxt4b9aLUAAAAM/milei-javier-milei.gif",
+            "kicillof": "https://media.tenor.com/UH-OX_1X8ZwAAAAM/axel-axel-kicillof.gif",
+            "cristina": "https://media.tenor.com/bU60bEqgnSIAAAAM/cfk-cristina.gif",
+            "alex": "https://media.tenor.com/0g_y8KH3KBAAAAAM/hijole-alex-caniggia.gif",
+            "Andy": "https://i.pinimg.com/474x/14/33/29/14332959a69880da310cd0a0998bbeb4.jpg"
+        };
+
+        if (!username) {
+            renderLogin();
+        } else {
+            renderLobby();
+        }
+
+        function renderLogin() {
+            app.innerHTML = `
+                <h1>Elige tu Personaje</h1>
+                <div id="chars">
+                    ${Object.keys(characterGifs).map(name => `<img src="${characterGifs[name]}" class="character" data-name="${name}" title="${name}">`).join('')}
+                </div>
+                <br>
+                <input type="text" id="userInput" placeholder="Tu nombre..." style="padding:10px; border-radius:5px;">
+                <button onclick="login()">Entrar</button>
+            `;
+            
+            let selected = "";
+            document.querySelectorAll('.character').forEach(img => {
+                img.onclick = () => {
+                    document.querySelectorAll('.character').forEach(i => i.classList.remove('selected'));
+                    img.classList.add('selected');
+                    selected = img.dataset.name;
+                };
+            });
+
+            window.login = async () => {
+                const user = document.getElementById("userInput").value;
+                if (!user || !selected) return alert("Completa todo");
+                
+                const res = await fetch("/login", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ username: user, character: selected })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem("username", user);
+                    localStorage.setItem("userCharacter", selected);
+                    location.reload();
+                } else { alert(data.message); }
+            };
+        }
+
+        function renderLobby() {
+            const socket = io();
+            const charName = localStorage.getItem("userCharacter");
+            const charGif = characterGifs[charName] || "";
+
+            app.innerHTML = `
+                <img src="${charGif}" class="lobby-avatar">
+                <h1>Hola ${username}</h1>
+                <div id="usersList">Esperando jugadores...</div>
+                <br>
+                <button id="startBtn">INICIAR JUEGO</button>
+                <div id="wordDisplay"></div>
+                <br>
+                <button onclick="localStorage.clear(); location.reload();" style="background:#888">Cerrar Sesión</button>
+            `;
+
+            // 1. Nos registramos apenas conectamos
+            socket.emit("register-user", username);
+
+            // 2. Escuchamos actualizaciones de la lista de usuarios (ESTO ES LO QUE TE FALTABA)
+            socket.on("users-list", (users) => {
+                const listDiv = document.getElementById("usersList");
+                if (users.length > 0) {
+                    listDiv.innerHTML = "<strong>Jugadores en sala:</strong><br>" + 
+                        users.map(u => `${u.username}`).join("<br>");
+                }
+            });
+
+            document.getElementById("startBtn").onclick = () => socket.emit("start-game");
+
+            socket.on("receive-role", data => {
+                const display = document.getElementById("wordDisplay");
+                display.style.display = "block";
+                if (data.role === "impostor") {
+                    display.innerHTML = "<h2 style='color:#ff4d4d'>ERES EL IMPOSTOR</h2><p>¡No dejes que te descubran!</p>";
+                } else {
+                    display.innerHTML = `<h2>Tu palabra es:</h2><p style='font-size:2.2rem; color:gold;'>${data.word}</p>`;
+                }
+            });
+
+            socket.on("error-msg", msg => alert(msg));
+        }
+    </script>
+</body>
+</html>
