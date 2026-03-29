@@ -27,9 +27,10 @@
             "Peron": "https://i.giphy.com/KbAj5yM9zzZRvX0YBn.webp",
             "Milei": "https://media.tenor.com/Wcpxt4b9aLUAAAAM/milei-javier-milei.gif",
             "kicillof": "https://media.tenor.com/UH-OX_1X8ZwAAAAM/axel-axel-kicillof.gif",
-            "cristina": "https://media.tenor.com/bU60bEqgnSIAAAAM/cfk-cristina.gif",
-            "alex": "https://media.tenor.com/0g_y8KH3KBAAAAAM/hijole-alex-caniggia.gif",
-            "Andy": "https://i.pinimg.com/474x/14/33/29/14332959a69880da310cd0a0998bbeb4.jpg"
+            "Cristina": "https://media.tenor.com/bU60bEqgnSIAAAAM/cfk-cristina.gif",
+            "Alex": "https://media.tenor.com/0g_y8KH3KBAAAAAM/hijole-alex-caniggia.gif",
+            "Andy": "https://media.sitioandino.com.ar/p/2aef65111593b42217758da02dbe2c2a/adjuntos/335/imagenes/000/820/0000820439/790x0/smart/andy-chango-masterchef-celebrity.jpg",
+            "Andre": "https://media.tenor.com/59qzl7WuRBEAAAAM/andreadelboca-andrea-del-boca.gif"
         };
 
         if (!username) {
@@ -47,6 +48,12 @@
                 <br>
                 <input type="text" id="userInput" placeholder="Tu nombre..." style="padding:10px; border-radius:5px;">
                 <button onclick="login()">Entrar</button>
+                <br><br>
+
+<label style="cursor:pointer;">
+    <input type="checkbox" id="hintCheckbox">
+    Usar Pista
+</label>
             `;
             
             let selected = "";
@@ -78,6 +85,7 @@
 
         function renderLobby() {
             const socket = io();
+
             const charName = localStorage.getItem("userCharacter");
             const charGif = characterGifs[charName] || "";
 
@@ -89,18 +97,30 @@
                 <button id="startBtn">INICIAR JUEGO</button>
                 <div id="wordDisplay"></div>
                 <br>
-                <button onclick="localStorage.clear(); location.reload();" style="background:#888">Cerrar Sesión</button>
+                <button id="logoutBtn" style="background:#888">Cerrar Sesión</button>
             `;
 
-            // 1. Nos registramos apenas conectamos
-            socket.emit("register-user", username);
+            // ✅ AHORA el botón existe
+            document.getElementById("logoutBtn").onclick = () => {
+                socket.emit("logout");
+                localStorage.clear();
+                location.reload();
+            };
 
-            // 2. Escuchamos actualizaciones de la lista de usuarios (ESTO ES LO QUE TE FALTABA)
+            const character = localStorage.getItem("userCharacter");
+
+            socket.emit("register-user", {
+                username,
+                character
+            });
+
             socket.on("users-list", (users) => {
                 const listDiv = document.getElementById("usersList");
                 if (users.length > 0) {
                     listDiv.innerHTML = "<strong>Jugadores en sala:</strong><br>" + 
                         users.map(u => `${u.username}`).join("<br>");
+                } else {
+                    listDiv.innerHTML = "Esperando jugadores...";
                 }
             });
 

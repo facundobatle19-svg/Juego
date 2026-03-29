@@ -43,11 +43,18 @@ app.post("/login", (req, res) => {
 
 io.on("connection", (socket) => {
     
-    socket.on("register-user", (username) => {
+    socket.on("register-user", ({ username, character }) => {
         socket.username = username;
+
+        let users = getUsers();
+
+        if (!users.some(u => u.username === username)) {
+            users.push({ username, character });
+            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+        }
+
         console.log(`${username} se unió al lobby`);
-        // Avisar a TODOS que la lista cambió
-        io.emit("users-list", getUsers());
+        io.emit("users-list", users);
     });
 
     socket.on("start-game", () => {
@@ -60,7 +67,6 @@ io.on("connection", (socket) => {
         const impostorIndex = Math.floor(Math.random() * currentUsers.length);
         const impostorName = currentUsers[impostorIndex].username;
 
-        // Enviar roles
         for (let [id, s] of io.sockets.sockets) {
             if (s.username === impostorName) {
                 s.emit("receive-role", { role: "impostor" });
@@ -70,12 +76,24 @@ io.on("connection", (socket) => {
         }
     });
 
+    // ✅ ACÁ VA (fuera de start-game)
+    socket.on("logout", () => {
+        if (socket.username) {
+            console.log(`${socket.username} cerró sesión`);
+
+            let users = getUsers().filter(u => u.username !== socket.username);
+            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+
+            io.emit("users-list", users);
+        }
+    });
+
     socket.on("disconnect", () => {
         if (socket.username) {
             console.log(`${socket.username} se desconectó`);
             let users = getUsers().filter(u => u.username !== socket.username);
             fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-            // Actualizar la lista para los que se quedan
+
             io.emit("users-list", users);
         }
     });
