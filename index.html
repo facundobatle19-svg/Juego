@@ -1,23 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impostor Game</title>
-    <style>
-        body { font-family: sans-serif; background: #222; color: white; text-align: center; padding-bottom: 80px; margin: 0; }
-        .container { width: 95%; max-width: 500px; margin: 20px auto; background: #333; padding: 25px; border-radius: 20px; box-sizing: border-box; }
-        #chars { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
-        .character { width: 80px; height: 80px; cursor: pointer; border-radius: 50%; border: 4px solid transparent; object-fit: cover; }
-        .selected { border-color: gold; transform: scale(1.1); box-shadow: 0 0 15px gold; }
-        .lobby-avatar { width: 140px; height: 140px; border-radius: 50%; border: 5px solid gold; margin: 10px auto; object-fit: cover; }
-        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: none; font-size: 1.1rem; box-sizing: border-box; background: #444; color: white; }
-        button { width: 100%; padding: 16px; cursor: pointer; background: gold; border: none; font-weight: bold; border-radius: 10px; margin: 8px 0; font-size: 1.1rem; }
-        #wordDisplay { font-size: 1.3rem; margin: 20px 0; padding: 25px; border: 3px dashed gold; display: none; background: #444; border-radius: 15px; }
-        #usersList { background: #444; padding: 15px; border-radius: 10px; margin: 15px 0; }
-        @media (max-width: 480px) { #chars { flex-direction: column; align-items: center; } .character { width: 120px; height: 120px; } }
-        #footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: #888; text-align: center; padding: 15px; font-size: 0.85rem; border-top: 1px solid #444; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impostor Game</title>
+<style>
+    body { font-family: sans-serif; background: #222; color: white; text-align: center; padding-bottom: 80px; margin: 0; }
+    .container { width: 95%; max-width: 500px; margin: 20px auto; background: #333; padding: 25px; border-radius: 20px; box-sizing: border-box; position: relative; }
+    #chars { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
+    .character { width: 80px; height: 80px; cursor: pointer; border-radius: 50%; border: 4px solid transparent; object-fit: cover; }
+    .selected { border-color: gold; transform: scale(1.1); box-shadow: 0 0 15px gold; }
+    .lobby-avatar { width: 140px; height: 140px; border-radius: 50%; border: 5px solid gold; margin: 10px auto; object-fit: cover; }
+    input[type="text"] { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: none; font-size: 1.1rem; box-sizing: border-box; background: #444; color: white; }
+    button { width: 100%; padding: 16px; cursor: pointer; background: gold; border: none; font-weight: bold; border-radius: 10px; margin: 8px 0; font-size: 1.1rem; }
+    #wordDisplay { font-size: 1.3rem; margin: 20px 0; padding: 25px; border: 3px dashed gold; display: none; background: #444; border-radius: 15px; }
+    #usersList { background: #444; padding: 15px; border-radius: 10px; margin: 15px 0; }
+    /* Dropdown negro */
+    select#impostorCount {
+        background-color: #333;
+        color: white;
+        border: 1px solid #666;
+        padding: 8px;
+        border-radius: 8px;
+    }
+    select#impostorCount option {
+        background-color: #333;
+        color: white;
+    }
+    /* Menú hamburguesa */
+    #hamburger { cursor:pointer; font-size:1.8rem; position:absolute; top:15px; right:15px; }
+    #menu { display:none; position:absolute; top:50px; right:15px; background:#333; border-radius:10px; padding:10px; min-width:150px; z-index:1000; }
+    #menu a { display:block; color:white; padding:5px 0; text-decoration:none; }
+    #menu a:hover { background: gold; color:black; border-radius:5px; }
+    @media (max-width: 480px) { 
+        #chars { flex-direction: column; align-items: center; } 
+        .character { width: 120px; height: 120px; } 
+        .container { padding: 15px; } 
+    }
+    #footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: #888; text-align: center; padding: 15px; font-size: 0.85rem; border-top: 1px solid #444; }
+</style>
 </head>
 <body>
 
@@ -47,22 +68,41 @@ const characterGifs = {
 let selectedChar = "";
 let username = localStorage.getItem("username");
 
-if (!username) {
-    renderLogin();
-} else {
-    renderLobby();
-}
+if (!username) renderLogin();
+else renderLobby();
 
 function renderLogin() {
     app.innerHTML = `
+        <!-- Menú Hamburguesa -->
+        <div id="menuContainer">
+            <div id="hamburger">☰</div>
+            <div id="menu">
+                <a href="#">Inicio</a>
+                <a href="#">Configuración</a>
+                <a href="#">Ayuda</a>
+            </div>
+        </div>
+
         <h1>¡Bienvenido!</h1>
         <div id="chars">
-            ${Object.keys(characterGifs).map(name => `<img src="${characterGifs[name]}" class="character" data-name="${name}">`).join('')}
+            ${Object.keys(characterGifs).map(name => 
+                `<img src="${characterGifs[name]}" class="character" data-name="${name}">`
+            ).join('')}
         </div>
         <input type="text" id="userInput" placeholder="Tu nombre...">
-        <label style="display:block; margin-bottom:15px;">
-            <input type="checkbox" id="hintCheckbox"> Usar Pista
-        </label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:10px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="hintCheckbox"> Usar Pista
+            </label>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="impostorCount">Cantidad de impostores:</label>
+                <select id="impostorCount">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+        </div>
         <button onclick="login()">ENTRAR</button>
     `;
 
@@ -73,18 +113,34 @@ function renderLogin() {
             selectedChar = img.dataset.name;
         };
     });
+
+    // JS Menú hamburguesa
+    const hamburger = document.getElementById("hamburger");
+    const menu = document.getElementById("menu");
+    hamburger.onclick = () => {
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+    };
+    window.onclick = (e) => {
+        if (!menu.contains(e.target) && e.target !== hamburger) menu.style.display = "none";
+    };
 }
 
 window.login = async () => {
     const user = document.getElementById("userInput").value.trim();
     const useHint = document.getElementById("hintCheckbox").checked;
-    
+    const impostorCount = document.getElementById("impostorCount").value;
+
     if (!user || !selectedChar) return alert("Elegí nombre y personaje");
 
     const res = await fetch("/login", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ username: user, character: selectedChar, useHint: useHint })
+        body: JSON.stringify({ 
+            username: user, 
+            character: selectedChar, 
+            useHint: useHint,
+            impostorCount: Number(impostorCount)
+        })
     });
 
     const data = await res.json();
@@ -102,6 +158,16 @@ function renderLobby() {
     const currentUsername = localStorage.getItem("username");
 
     app.innerHTML = `
+        <!-- Menú Hamburguesa -->
+        <div id="menuContainer">
+            <div id="hamburger">☰</div>
+            <div id="menu">
+                <a href="#">Inicio</a>
+                <a href="#">Configuración</a>
+                <a href="#">Ayuda</a>
+            </div>
+        </div>
+
         <img src="${charGif}" class="lobby-avatar">
         <h1>Hola ${currentUsername}</h1>
         <div id="usersList">Cargando jugadores...</div>
@@ -110,22 +176,32 @@ function renderLobby() {
         <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
     `;
 
+    // JS Menú hamburguesa
+    const hamburger = document.getElementById("hamburger");
+    const menu = document.getElementById("menu");
+    hamburger.onclick = () => {
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+    };
+    window.onclick = (e) => {
+        if (!menu.contains(e.target) && e.target !== hamburger) menu.style.display = "none";
+    };
+
     socket.emit("register-user", { username: currentUsername });
 
     socket.on("users-list", users => {
-        const listDiv = document.getElementById("usersList");
-        if (listDiv) {
-            listDiv.innerHTML = "<strong>Jugadores en sala:</strong><br>" + users.map(u => u.username).join("<br>");
-        }
+        document.getElementById("usersList").innerHTML =
+            "<strong>Jugadores en sala:</strong><br>" +
+            users.map(u => u.username).join("<br>");
     });
 
-    document.getElementById("startBtn").onclick = () => socket.emit("start-game");
+    document.getElementById("startBtn").onclick = () => {
+        localStorage.removeItem("gameData");
+        socket.emit("start-game");
+    };
 
-    // 🔥 NUEVO: función para mostrar rol
     function mostrarRol(data) {
         const display = document.getElementById("wordDisplay");
         display.style.display = "block";
-
         if (data.role === "impostor") {
             display.innerHTML = `
                 <h2 style='color:red'>ERES EL IMPOSTOR</h2>
@@ -139,24 +215,20 @@ function renderLobby() {
         }
     }
 
-    // 🔥 NUEVO: guardar rol
     socket.on("receive-role", data => {
         localStorage.setItem("gameData", JSON.stringify(data));
         mostrarRol(data);
     });
 
-    // 🔥 NUEVO: recuperar rol al refrescar
     const savedGame = localStorage.getItem("gameData");
-    if (savedGame) {
-        mostrarRol(JSON.parse(savedGame));
-    }
+    if (savedGame) mostrarRol(JSON.parse(savedGame));
 
     document.getElementById("logoutBtn").onclick = () => {
         socket.emit("logout");
         localStorage.clear();
         location.reload();
     };
-    
+
     socket.on("error-msg", msg => alert(msg));
 }
 </script>
