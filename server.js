@@ -11,104 +11,63 @@ const io = new Server(httpServer);
 const PORT = process.env.PORT || 3000;
 const USERS_FILE = path.join(__dirname, "users.json");
 
-// ✅ PALABRAS CON PISTA
 const words = [
     { word: "Gato", hint: "Animal doméstico" },
     { word: "Perro", hint: "Mejor amigo del hombre" },
     { word: "Pizza", hint: "Comida italiana" },
     { word: "Messi", hint: "Futbolista argentino" },
+    { word: "Mate", hint: "Infusión argentina" },
+    { word: "Asado", hint: "Comida típica argentina" },
     { word: "Computadora", hint: "Sirve para programar" },
     { word: "Avión", hint: "Vuela por el cielo" },
-    { word: "Mate", hint: "Infusión argentina" },
-    { word: "Cine", hint: "Lugar para ver películas" },
-    { word: "Fútbol", hint: "Deporte popular" },
-    { word: "Asado", hint: "Comida típica argentina" },
-    { word: "Helado", hint: "Postre frío" },
-    { word: "Montaña", hint: "Gran elevación natural" },
-    { word: "Río", hint: "Corriente de agua" },
-    { word: "Libro", hint: "Se lee" },
-    { word: "Celular", hint: "Dispositivo móvil" },
-    { word: "Televisión", hint: "Pantalla para ver programas" },
-    { word: "Escuela", hint: "Lugar para aprender" },
-    { word: "Profesor", hint: "Enseña" },
-    { word: "Alumno", hint: "Aprende" },
-    { word: "Auto", hint: "Vehículo terrestre" },
-    { word: "Bicicleta", hint: "Se mueve con pedales" },
-    { word: "Tren", hint: "Transporte sobre rieles" },
-    { word: "Barco", hint: "Viaja por el agua" },
-    { word: "Playa", hint: "Arena y mar" },
-    { word: "Sol", hint: "Estrella que ilumina la Tierra" },
-    { word: "Luna", hint: "Satélite natural" },
-    { word: "Estrella", hint: "Brilla en el cielo" },
-    { word: "Nube", hint: "Está en el cielo" },
-    { word: "Lluvia", hint: "Agua que cae del cielo" },
-    { word: "Tormenta", hint: "Lluvia con viento" },
-    { word: "Fuego", hint: "Produce calor" },
-    { word: "Hielo", hint: "Agua congelada" },
-    { word: "Bosque", hint: "Muchos árboles" },
-    { word: "Desierto", hint: "Muy seco" },
-    { word: "Isla", hint: "Tierra rodeada de agua" },
-    { word: "Puente", hint: "Une dos lados" },
-    { word: "Camino", hint: "Por donde se transita" },
-    { word: "Semáforo", hint: "Controla el tránsito" },
-    { word: "Hospital", hint: "Lugar para curarse" },
-    { word: "Doctor", hint: "Cuida la salud" },
-    { word: "Enfermero", hint: "Asiste al médico" },
-    { word: "Farmacia", hint: "Venden medicamentos" },
-    { word: "Pan", hint: "Alimento básico" },
-    { word: "Queso", hint: "Derivado de la leche" },
-    { word: "Leche", hint: "Bebida blanca" },
-    { word: "Café", hint: "Bebida estimulante" },
-    { word: "Té", hint: "Infusión caliente" },
-    { word: "Agua", hint: "Esencial para la vida" },
-    { word: "Jugo", hint: "Bebida de frutas" },
-    { word: "Chocolate", hint: "Dulce de cacao" },
-    { word: "Caramelo", hint: "Dulce pequeño" },
-    { word: "Torta", hint: "Postre de cumpleaños" },
-    { word: "Galleta", hint: "Se come con mate" },
-    { word: "Cuchillo", hint: "Sirve para cortar" },
-    { word: "Tenedor", hint: "Utensilio con puntas" },
-    { word: "Cuchara", hint: "Para sopas" },
-    { word: "Plato", hint: "Donde se sirve comida" },
-    { word: "Vaso", hint: "Para beber" },
-    { word: "Mesa", hint: "Mueble para comer" },
-    { word: "Silla", hint: "Para sentarse" },
-    { word: "Puerta", hint: "Entrada a un lugar" },
-    { word: "Ventana", hint: "Deja pasar la luz" },
-    { word: "Techo", hint: "Parte superior de una casa" },
-    { word: "Piso", hint: "Se camina sobre él" },
-    { word: "Cama", hint: "Para dormir" },
-    { word: "Almohada", hint: "Para apoyar la cabeza" },
-    { word: "Manta", hint: "Abriga" },
-    { word: "Reloj", hint: "Marca la hora" },
-    { word: "Calendario", hint: "Muestra fechas" },
-    { word: "Bolígrafo", hint: "Sirve para escribir" },
-    { word: "Lápiz", hint: "Se puede borrar" },
-    { word: "Cuaderno", hint: "Para escribir notas" },
-    { word: "Mochila", hint: "Lleva útiles" },
-    { word: "Juego", hint: "Actividad divertida" },
-    { word: "Pelota", hint: "Se usa en deportes" },
-    { word: "Raqueta", hint: "Para tenis" },
-    { word: "Gol", hint: "Punto en fútbol" },
-    { word: "Equipo", hint: "Grupo de jugadores" },
-    { word: "Árbitro", hint: "Hace cumplir reglas" },
-    { word: "Carrera", hint: "Competencia de velocidad" },
-    { word: "Música", hint: "Se escucha" },
-    { word: "Canción", hint: "Tiene letra y ritmo" },
-    { word: "Guitarra", hint: "Instrumento de cuerdas" },
-    { word: "Piano", hint: "Instrumento con teclas" },
-    { word: "Batería", hint: "Instrumento de percusión" },
-    { word: "Baile", hint: "Movimiento con música" },
-    { word: "Fiesta", hint: "Celebración" },
-    { word: "Regalo", hint: "Se da en ocasiones especiales" },
-    { word: "Cumpleaños", hint: "Se celebra cada año" },
-    { word: "Amigo", hint: "Persona cercana" }
+    { word: "Heladera", hint: "Siempre está cerrada pero todos la abren" },
+{ word: "Semáforo", hint: "Da órdenes sin hablar" },
+{ word: "Biblioteca", hint: "Un lugar donde el silencio pesa" },
+{ word: "Reloj", hint: "Nunca se detiene, pero no se mueve" },
+{ word: "Sombra", hint: "Te sigue aunque no la invites" },
+{ word: "Teclado", hint: "Habla sin voz" },
+{ word: "Montaña", hint: "Mientras más subís, menos aire hay" },
+{ word: "Cartera", hint: "A veces está llena, muchas veces no" },
+{ word: "Ascensor", hint: "Sube y baja sin cansarse" },
+{ word: "Ventana", hint: "Permite ver sin salir" },
+
+{ word: "Zapato", hint: "Siempre va de a dos" },
+{ word: "Luna", hint: "Aparece cuando el sol se va" },
+{ word: "Espejo", hint: "Nunca miente, pero tampoco habla" },
+{ word: "Fuego", hint: "Puede dar calor o problemas" },
+{ word: "Libro", hint: "Tiene mundos sin moverse" },
+{ word: "Llave", hint: "Abre más que puertas" },
+{ word: "Cama", hint: "Donde todo termina cada día" },
+{ word: "Puerta", hint: "Divide pero también conecta" },
+{ word: "Nube", hint: "Cambia de forma sin avisar" },
+{ word: "Arena", hint: "Mucho de algo muy pequeño" },
+
+{ word: "Celular", hint: "No se separa de la mano" },
+{ word: "Auriculares", hint: "Te aíslan sin moverte" },
+{ word: "Televisor", hint: "Muestra historias sin que participes" },
+{ word: "Cuchillo", hint: "Divide con precisión" },
+{ word: "Camisa", hint: "Va por dentro o por fuera" },
+{ word: "Puente", hint: "Une lo separado" },
+{ word: "Auto", hint: "Se mueve sin patas" },
+{ word: "Paraguas", hint: "Se abre cuando peor está el clima" },
+{ word: "Gafas", hint: "Te ayudan a ver lo que ya está" },
+{ word: "Bolso", hint: "Carga más de lo que parece" },
+
+{ word: "Desierto", hint: "Mucho espacio, poca vida" },
+{ word: "Isla", hint: "Rodeada por lo mismo en todos lados" },
+{ word: "Camino", hint: "No es destino, pero te lleva" },
+{ word: "Tren", hint: "Nunca gira libremente" },
+{ word: "Barco", hint: "Avanza sin ruedas" },
+{ word: "Hospital", hint: "Donde se lucha por seguir" },
+{ word: "Escuela", hint: "No siempre se aprende lo importante" },
+{ word: "Cine", hint: "Oscuro pero lleno de historias" },
+{ word: "Teatro", hint: "Todo es real y falso a la vez" },
+{ word: "Parque", hint: "Un respiro dentro del ruido" }
 ];
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// 📂 Leer usuarios
 const getUsers = () => {
     if (fs.existsSync(USERS_FILE)) {
         try {
@@ -118,100 +77,80 @@ const getUsers = () => {
     return [];
 };
 
-// 🔐 LOGIN
 app.post("/login", (req, res) => {
-    const { username, character } = req.body;
+    const { username, character, useHint } = req.body;
     let users = getUsers();
 
-    if (users.some(u => u.character === character)) {
-        return res.send({ success: false, message: "Personaje ya elegido por otro" });
+    if (users.some(u => u.username === username)) {
+        // Si el usuario ya existe (por refresh), permitimos el login
+        return res.send({ success: true, username });
     }
 
-    if (!users.some(u => u.username === username)) {
-        users.push({ username, character });
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    if (users.some(u => u.character === character)) {
+        return res.send({ success: false, message: "Personaje ya elegido" });
     }
+
+    users.push({ username, character, useHint });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 
     res.send({ success: true, username });
 });
 
-// 🔌 SOCKETS
 io.on("connection", (socket) => {
 
-    // 👤 REGISTRAR USUARIO
-    socket.on("register-user", ({ username, character }) => {
+    socket.on("register-user", ({ username }) => {
+        if (!username) return;
         socket.username = username;
-
-        let users = getUsers();
-
-        if (!users.some(u => u.username === username)) {
-            users.push({ username, character });
-            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-        }
-
-        console.log(`${username} se unió al lobby`);
-        io.emit("users-list", users);
+        console.log(`${username} sincronizado en el socket`);
+        io.emit("users-list", getUsers());
     });
 
-    // 🎮 INICIAR JUEGO (AHORA RECIBE useHint)
-    socket.on("start-game", ({ useHint }) => {
+    socket.on("start-game", () => {
         const currentUsers = getUsers();
 
         if (currentUsers.length < 2) {
-            return socket.emit("error-msg", "Mínimo 2 jugadores para empezar");
+            return socket.emit("error-msg", "Mínimo 2 jugadores");
         }
 
-        // 🎲 palabra + pista
         const selected = words[Math.floor(Math.random() * words.length)];
-        const selectedWord = selected.word;
-        const hint = selected.hint;
-
-        // 🕵️ impostor
         const impostorIndex = Math.floor(Math.random() * currentUsers.length);
         const impostorName = currentUsers[impostorIndex].username;
 
-        // 📤 enviar roles
+        // Enviamos roles a todos los sockets activos
         for (let [id, s] of io.sockets.sockets) {
+            const userData = currentUsers.find(u => u.username === s.username);
+            if (!userData) continue;
+
             if (s.username === impostorName) {
                 s.emit("receive-role", { 
                     role: "impostor",
-                    hint: useHint ? hint : null // 👈 clave
+                    hint: userData.useHint ? selected.hint : null 
                 });
             } else {
                 s.emit("receive-role", { 
                     role: "player", 
-                    word: selectedWord
+                    word: selected.word
                 });
             }
         }
     });
 
-    // 🚪 LOGOUT
+    // Solo eliminamos al usuario cuando presiona "Cerrar Sesión"
     socket.on("logout", () => {
         if (socket.username) {
-            console.log(`${socket.username} cerró sesión`);
-
+            console.log(`${socket.username} salió de la sala`);
             let users = getUsers().filter(u => u.username !== socket.username);
             fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-
             io.emit("users-list", users);
         }
     });
 
-    // ❌ DESCONECTAR
+    // El evento disconnect queda vacío para evitar que el refresh borre al usuario
     socket.on("disconnect", () => {
-        if (socket.username) {
-            console.log(`${socket.username} se desconectó`);
-
-            let users = getUsers().filter(u => u.username !== socket.username);
-            fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-
-            io.emit("users-list", users);
-        }
+        console.log("Un socket se desconectó temporalmente");
     });
 });
 
-// 🚀 SERVIDOR
 httpServer.listen(PORT, () => {
-    console.log(`Servidor en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

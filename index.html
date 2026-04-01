@@ -1,61 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Impostor Game</title>
-<style>
-body { 
-    font-family: sans-serif; 
-    background: #222; 
-    color: white; 
-    text-align: center; 
-    padding-bottom: 60px; /* 🔥 para que no tape contenido */
-}
-
-.container { max-width: 500px; margin: 50px auto; background: #333; padding: 20px; border-radius: 15px; }
-
-.character { width: 80px; height: 80px; cursor: pointer; border-radius: 50%; border: 3px solid transparent; object-fit: cover; margin: 5px; }
-
-.selected { border-color: gold; transform: scale(1.1); }
-
-.lobby-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid gold; margin: 10px auto; object-fit: cover; }
-
-button { padding: 10px 20px; cursor: pointer; background: gold; border: none; font-weight: bold; border-radius: 5px; margin: 5px; }
-
-#wordDisplay { font-size: 1.5rem; margin: 20px; padding: 20px; border: 2px dashed gold; display: none; background: #444; }
-
-#usersList { background: #444; padding: 10px; border-radius: 10px; margin-top: 10px; }
-
-/* 🔥 FOOTER */
-#footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #111;
-    color: #aaa;
-    text-align: center;
-    padding: 10px;
-    font-size: 0.9rem;
-    border-top: 1px solid #444;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostor Game</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: white; text-align: center; padding-bottom: 80px; margin: 0; }
+        .container { width: 95%; max-width: 500px; margin: 20px auto; background: #333; padding: 25px; border-radius: 20px; box-sizing: border-box; }
+        #chars { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
+        .character { width: 80px; height: 80px; cursor: pointer; border-radius: 50%; border: 4px solid transparent; object-fit: cover; }
+        .selected { border-color: gold; transform: scale(1.1); box-shadow: 0 0 15px gold; }
+        .lobby-avatar { width: 140px; height: 140px; border-radius: 50%; border: 5px solid gold; margin: 10px auto; object-fit: cover; }
+        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: none; font-size: 1.1rem; box-sizing: border-box; background: #444; color: white; }
+        button { width: 100%; padding: 16px; cursor: pointer; background: gold; border: none; font-weight: bold; border-radius: 10px; margin: 8px 0; font-size: 1.1rem; }
+        #wordDisplay { font-size: 1.3rem; margin: 20px 0; padding: 25px; border: 3px dashed gold; display: none; background: #444; border-radius: 15px; }
+        #usersList { background: #444; padding: 15px; border-radius: 10px; margin: 15px 0; }
+        @media (max-width: 480px) { #chars { flex-direction: column; align-items: center; } .character { width: 120px; height: 120px; } }
+        #footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: #888; text-align: center; padding: 15px; font-size: 0.85rem; border-top: 1px solid #444; }
+    </style>
 </head>
 <body>
 
 <div id="app" class="container"></div>
 
-<!-- 🔥 FOOTER -->
 <footer id="footer">
-    © <span id="year"></span> Impostor Game - Todos los derechos reservados
+    © <span id="year"></span> Impostor Game
 </footer>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script>
 document.getElementById("year").textContent = new Date().getFullYear();
-
 const app = document.getElementById("app");
-let username = localStorage.getItem("username");
 
 const characterGifs = {
     "Peron": "https://i.giphy.com/KbAj5yM9zzZRvX0YBn.webp",
@@ -65,85 +40,96 @@ const characterGifs = {
     "Alex": "https://media.tenor.com/0g_y8KH3KBAAAAAM/hijole-alex-caniggia.gif",
     "Andy": "https://media.sitioandino.com.ar/p/2aef65111593b42217758da02dbe2c2a/adjuntos/335/imagenes/000/820/0000820439/790x0/smart/andy-chango-masterchef-celebrity.jpg",
     "Andre": "https://media.tenor.com/59qzl7WuRBEAAAAM/andreadelboca-andrea-del-boca.gif",
-    "Macri": "https://media.tenor.com/KEbPrrnmqMsAAAAM/por-dio-sign-of-the-cross.gif",
+    "Macri": "https://prisioneroenargentina.com/wp-content/uploads/2023/09/MacriRisaGIF.gif",
     "Evita": "https://mir-s3-cdn-cf.behance.net/project_modules/hd/aa5b7381451879.5d0011880c9cd.gif"
 };
 
-if (!username) renderLogin();
-else renderLobby();
+let selectedChar = "";
+let username = localStorage.getItem("username");
+
+if (!username) {
+    renderLogin();
+} else {
+    renderLobby();
+}
 
 function renderLogin() {
     app.innerHTML = `
-        <h1>Elige tu Personaje</h1>
+        <h1>¡Bienvenido!</h1>
         <div id="chars">
             ${Object.keys(characterGifs).map(name => `<img src="${characterGifs[name]}" class="character" data-name="${name}">`).join('')}
         </div>
-        <br>
         <input type="text" id="userInput" placeholder="Tu nombre...">
-        <button onclick="login()">Entrar</button>
-        <br><br>
-        <label>
-            <input type="checkbox" id="hintCheckbox">
-            Usar Pista
+        <label style="display:block; margin-bottom:15px;">
+            <input type="checkbox" id="hintCheckbox"> Usar Pista
         </label>
+        <button onclick="login()">ENTRAR</button>
     `;
 
-    let selected = "";
     document.querySelectorAll('.character').forEach(img => {
         img.onclick = () => {
             document.querySelectorAll('.character').forEach(i => i.classList.remove('selected'));
             img.classList.add('selected');
-            selected = img.dataset.name;
+            selectedChar = img.dataset.name;
         };
     });
-
-    window.login = async () => {
-        const user = document.getElementById("userInput").value;
-        if (!user || !selected) return alert("Completa todo");
-
-        const useHint = document.getElementById("hintCheckbox").checked;
-        localStorage.setItem("useHint", useHint);
-
-        const res = await fetch("/login", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ username: user, character: selected })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            localStorage.setItem("username", user);
-            localStorage.setItem("userCharacter", selected);
-            location.reload();
-        } else alert(data.message);
-    };
 }
+
+window.login = async () => {
+    const user = document.getElementById("userInput").value.trim();
+    const useHint = document.getElementById("hintCheckbox").checked;
+    
+    if (!user || !selectedChar) return alert("Elegí nombre y personaje");
+
+    const res = await fetch("/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username: user, character: selectedChar, useHint: useHint })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+        localStorage.setItem("username", user);
+        localStorage.setItem("userCharacter", selectedChar);
+        location.reload();
+    } else alert(data.message);
+};
 
 function renderLobby() {
     const socket = io();
-
     const charName = localStorage.getItem("userCharacter");
     const charGif = characterGifs[charName] || "";
+    const currentUsername = localStorage.getItem("username");
 
     app.innerHTML = `
         <img src="${charGif}" class="lobby-avatar">
-        <h1>Hola ${username}</h1>
-        <div id="usersList">Esperando jugadores...</div>
-        <button id="startBtn">INICIAR JUEGO</button>
+        <h1>Hola ${currentUsername}</h1>
+        <div id="usersList">Cargando jugadores...</div>
         <div id="wordDisplay"></div>
-        <button id="logoutBtn">Cerrar Sesión</button>
+        <button id="startBtn">INICIAR PARTIDA</button>
+        <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
     `;
 
-    const savedRole = localStorage.getItem("roleData");
-    if (savedRole) {
-        const data = JSON.parse(savedRole);
+    socket.emit("register-user", { username: currentUsername });
+
+    socket.on("users-list", users => {
+        const listDiv = document.getElementById("usersList");
+        if (listDiv) {
+            listDiv.innerHTML = "<strong>Jugadores en sala:</strong><br>" + users.map(u => u.username).join("<br>");
+        }
+    });
+
+    document.getElementById("startBtn").onclick = () => socket.emit("start-game");
+
+    // 🔥 NUEVO: función para mostrar rol
+    function mostrarRol(data) {
         const display = document.getElementById("wordDisplay");
         display.style.display = "block";
 
         if (data.role === "impostor") {
             display.innerHTML = `
                 <h2 style='color:red'>ERES EL IMPOSTOR</h2>
-                ${data.hint ? `<p>Pista: ${data.hint}</p>` : ""}
+                ${data.hint ? `<p>Pista: ${data.hint}</p>` : "<p>Elegiste jugar sin pistas.</p>"}
             `;
         } else {
             display.innerHTML = `
@@ -153,51 +139,26 @@ function renderLobby() {
         }
     }
 
+    // 🔥 NUEVO: guardar rol
+    socket.on("receive-role", data => {
+        localStorage.setItem("gameData", JSON.stringify(data));
+        mostrarRol(data);
+    });
+
+    // 🔥 NUEVO: recuperar rol al refrescar
+    const savedGame = localStorage.getItem("gameData");
+    if (savedGame) {
+        mostrarRol(JSON.parse(savedGame));
+    }
+
     document.getElementById("logoutBtn").onclick = () => {
         socket.emit("logout");
         localStorage.clear();
         location.reload();
     };
-
-    socket.emit("register-user", {
-        username,
-        character: localStorage.getItem("userCharacter")
-    });
-
-    socket.on("users-list", users => {
-        document.getElementById("usersList").innerHTML =
-            users.length > 0
-                ? "<strong>Jugadores:</strong><br>" + users.map(u => u.username).join("<br>")
-                : "Esperando jugadores...";
-    });
-
-    document.getElementById("startBtn").onclick = () => {
-        const useHint = localStorage.getItem("useHint") === "true";
-        socket.emit("start-game", { useHint });
-    };
-
-    socket.on("receive-role", data => {
-        const display = document.getElementById("wordDisplay");
-        display.style.display = "block";
-
-        localStorage.setItem("roleData", JSON.stringify(data));
-
-        if (data.role === "impostor") {
-            display.innerHTML = `
-                <h2 style='color:red'>ERES EL IMPOSTOR</h2>
-                ${data.hint ? `<p>Pista: ${data.hint}</p>` : ""}
-            `;
-        } else {
-            display.innerHTML = `
-                <h2>Tu palabra:</h2>
-                <p style='font-size:2rem;color:gold'>${data.word}</p>
-            `;
-        }
-    });
-
+    
     socket.on("error-msg", msg => alert(msg));
 }
 </script>
-
 </body>
 </html>
