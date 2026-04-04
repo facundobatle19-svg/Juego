@@ -28,12 +28,12 @@
         color: white;
     }
     /* Menú hamburguesa */
-    #hamburger { cursor:pointer; font-size:1.8rem; position:absolute; top:15px; right:15px; }
-    #menu { display:none; position:absolute; top:50px; right:15px; background:#333; border-radius:10px; padding:10px; min-width:150px; z-index:1000; }
+    #hamburger { cursor:pointer; font-size:1.8rem; position:absolute; top:15px; left:15px; }
+    #menu { display:none; position:absolute; top:50px; left:15px; background:#333; border-radius:10px; padding:10px; min-width:150px; z-index:1000; }
     #menu a { display:block; color:white; padding:5px 0; text-decoration:none; }
     #menu a:hover { background: gold; color:black; border-radius:5px; }
     @media (max-width: 480px) { 
-        #chars { flex-direction: column; align-items: center; } 
+        #chars { align-items: center; } 
         .character { width: 120px; height: 120px; } 
         .container { padding: 15px; } 
     }
@@ -62,7 +62,8 @@ const characterGifs = {
     "Andy": "https://media.sitioandino.com.ar/p/2aef65111593b42217758da02dbe2c2a/adjuntos/335/imagenes/000/820/0000820439/790x0/smart/andy-chango-masterchef-celebrity.jpg",
     "Andre": "https://media.tenor.com/59qzl7WuRBEAAAAM/andreadelboca-andrea-del-boca.gif",
     "Macri": "https://prisioneroenargentina.com/wp-content/uploads/2023/09/MacriRisaGIF.gif",
-    "Evita": "https://mir-s3-cdn-cf.behance.net/project_modules/hd/aa5b7381451879.5d0011880c9cd.gif"
+    "Evita": "https://mir-s3-cdn-cf.behance.net/project_modules/hd/aa5b7381451879.5d0011880c9cd.gif",
+    "Nicki": "https://mir-s3-cdn-cf.behance.net/project_modules/1400/6fbe43102775563.5f3ee348ee48e.gif"
 };
 
 let selectedChar = "";
@@ -173,6 +174,7 @@ function renderLobby() {
         <div id="usersList">Cargando jugadores...</div>
         <div id="wordDisplay"></div>
         <button id="startBtn">INICIAR PARTIDA</button>
+        <button id="voteBtn" style="background:#ff4444;">VOTAR</button>
         <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
     `;
 
@@ -189,10 +191,16 @@ function renderLobby() {
     socket.emit("register-user", { username: currentUsername });
 
     socket.on("users-list", users => {
-        document.getElementById("usersList").innerHTML =
-            "<strong>Jugadores en sala:</strong><br>" +
-            users.map(u => u.username).join("<br>");
-    });
+    document.getElementById("usersList").innerHTML =
+        "<strong>Jugadores en sala:</strong><br>" +
+        users.map(u => `
+            <div style="display:inline-flex; align-items:center; gap:10px; margin:5px 0;">
+                <span>${u.username}</span>
+                <img src="${characterGifs[u.character]}" 
+                style="display:inline-flex; width:40px; height:40px; border-radius:50%; object-fit:cover;"
+            </div>
+        `).join("");
+});
 
     document.getElementById("startBtn").onclick = () => {
         localStorage.removeItem("gameData");

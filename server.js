@@ -79,24 +79,22 @@ app.post("/login", (req, res) => {
     const { username, character, useHint, impostorCount } = req.body;
     let users = getUsers();
 
-    const existingIndex = users.findIndex(u => u.username === username);
+    // 🚨 VALIDAR SIEMPRE EL PERSONAJE
+    const characterTaken = users.find(u => u.character === character);
 
-    if (existingIndex !== -1) {
-        // Actualizamos preferencias si el usuario ya existía
-        users[existingIndex].useHint = useHint;
-        users[existingIndex].impostorCount = Number(impostorCount);
-    } else {
-        // Si es nuevo, verificamos que el personaje no esté ocupado
-        if (users.some(u => u.character === character)) {
-            return res.send({ success: false, message: "Personaje ya elegido" });
-        }
-        users.push({ 
-            username, 
-            character, 
-            useHint, 
-            impostorCount: Number(impostorCount) 
-        });
+    // Si el personaje ya está ocupado → bloquear
+    if (characterTaken) {
+        return res.send({ success: false, message: "Personaje ya elegido" });
     }
+
+    // ❌ NO usar username como identificador único
+    // ✅ permitir nombres repetidos
+    users.push({ 
+        username, 
+        character, 
+        useHint, 
+        impostorCount: Number(impostorCount) 
+    });
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.send({ success: true });
