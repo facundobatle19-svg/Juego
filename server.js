@@ -68,9 +68,7 @@ const getUsers = () => {
     if (fs.existsSync(USERS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-        } catch {
-            return [];
-        }
+        } catch { return []; }
     }
     return [];
 };
@@ -78,30 +76,15 @@ const getUsers = () => {
 app.post("/login", (req, res) => {
     const { username, character, useHint, impostorCount } = req.body;
     let users = getUsers();
-
-    // 🚨 VALIDAR SIEMPRE EL PERSONAJE
-    const characterTaken = users.find(u => u.character === character);
-
-    // Si el personaje ya está ocupado → bloquear
-    if (characterTaken) {
+    if (users.find(u => u.character === character)) {
         return res.send({ success: false, message: "Personaje ya elegido" });
     }
-
-    // ❌ NO usar username como identificador único
-    // ✅ permitir nombres repetidos
-    users.push({ 
-        username, 
-        character, 
-        useHint, 
-        impostorCount: Number(impostorCount) 
-    });
-
+    users.push({ username, character, useHint, impostorCount: Number(impostorCount) });
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.send({ success: true });
 });
 
 io.on("connection", (socket) => {
-
     socket.on("register-user", ({ username }) => {
         socket.username = username;
         io.emit("users-list", getUsers());
@@ -109,18 +92,11 @@ io.on("connection", (socket) => {
 
     socket.on("start-game", () => {
         const users = getUsers();
-
-        if (users.length < 2) {
-            return socket.emit("error-msg", "Mínimo 2 jugadores");
-        }
+        if (users.length < 2) return socket.emit("error-msg", "Mínimo 2 jugadores");
 
         const selected = words[Math.floor(Math.random() * words.length)];
-
-        // Buscamos la configuración del usuario que inició la partida
         const host = users.find(u => u.username === socket.username);
         let requestedImpostors = host ? host.impostorCount : 1;
-
-        // Validamos que no haya más impostores que jugadores (dejando al menos 1 civil)
         const actualImpostors = Math.min(requestedImpostors, users.length - 1);
 
         const shuffled = [...users].sort(() => 0.5 - Math.random());
@@ -129,18 +105,20 @@ io.on("connection", (socket) => {
         for (let [id, s] of io.sockets.sockets) {
             const userData = users.find(u => u.username === s.username);
             if (!userData) continue;
-
             if (impostors.includes(s.username)) {
-                s.emit("receive-role", {
-                    role: "impostor",
-                    hint: userData.useHint ? selected.hint : null
-                });
+                s.emit("receive-role", { role: "impostor", hint: userData.useHint ? selected.hint : null });
             } else {
-                s.emit("receive-role", {
-                    role: "player",
-                    word: selected.word
-                });
+                s.emit("receive-role", { role: "player", word: selected.word });
             }
+        }
+    });
+
+    // LÓGICA DE VOTACIÓN
+    socket.on("send-vote", ({ target }) => {
+        const users = getUsers();
+        const voter = users.find(u => u.username === socket.username);
+        if (voter) {
+            io.emit("vote-received", { voter: voter.username, target: target });
         }
     });
 
@@ -151,10 +129,6 @@ io.on("connection", (socket) => {
             io.emit("users-list", users);
         }
     });
-
-    socket.on("disconnect", () => {});
 });
 
-httpServer.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+httpServer.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));

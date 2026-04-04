@@ -42,6 +42,15 @@
 </head>
 <body>
 
+    <div id="voteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
+        <div class="container" style="max-width:400px; border:2px solid gold;">
+            <h2>¿Quién es el impostor?</h2>
+            <div id="voteOptions" style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
+                </div>
+            <button onclick="closeVote()" style="background:#666;">CANCELAR</button>
+        </div>
+    </div>
+
 <div id="app" class="container"></div>
 
 <footer id="footer">
@@ -63,7 +72,10 @@ const characterGifs = {
     "Andre": "https://media.tenor.com/59qzl7WuRBEAAAAM/andreadelboca-andrea-del-boca.gif",
     "Macri": "https://prisioneroenargentina.com/wp-content/uploads/2023/09/MacriRisaGIF.gif",
     "Evita": "https://mir-s3-cdn-cf.behance.net/project_modules/hd/aa5b7381451879.5d0011880c9cd.gif",
-    "Nicki": "https://mir-s3-cdn-cf.behance.net/project_modules/1400/6fbe43102775563.5f3ee348ee48e.gif"
+    "Nicki": "https://mir-s3-cdn-cf.behance.net/project_modules/1400/6fbe43102775563.5f3ee348ee48e.gif",
+    "Burlando": "https://mendozatoday.com.ar/wp-content/uploads/2024/06/burlando-estrella.gif"
+
+    
 };
 
 let selectedChar = "";
@@ -178,6 +190,40 @@ function renderLobby() {
         <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
     `;
 
+  // Función para cerrar el modal
+window.closeVote = () => {
+    document.getElementById("voteModal").style.display = "none";
+};
+
+document.getElementById("voteBtn").onclick = () => {
+    // CAMBIO AQUÍ: Ahora buscamos por la clase específica 'player-name'
+    const users = Array.from(document.querySelectorAll('.player-name')).map(s => s.innerText.trim());
+    const currentUsername = localStorage.getItem("username");
+    const optionsContainer = document.getElementById("voteOptions");
+    
+    optionsContainer.innerHTML = "";
+
+    let targets = users.filter(u => u !== currentUsername);
+
+    if (targets.length === 0) return alert("No hay otros jugadores para votar");
+
+    // Evitar nombres duplicados en el pop-up (por si acaso)
+    const uniqueTargets = [...new Set(targets)];
+
+    uniqueTargets.forEach(name => {
+        const btn = document.createElement("button");
+        btn.innerText = name;
+        btn.style.background = "#444";
+        btn.style.color = "white";
+        btn.onclick = () => {
+            socket.emit("send-vote", { target: name });
+            closeVote();
+        };
+        optionsContainer.appendChild(btn);
+    });
+
+    document.getElementById("voteModal").style.display = "flex";
+};
     // JS Menú hamburguesa
     const hamburger = document.getElementById("hamburger");
     const menu = document.getElementById("menu");
@@ -194,10 +240,10 @@ function renderLobby() {
     document.getElementById("usersList").innerHTML =
         "<strong>Jugadores en sala:</strong><br>" +
         users.map(u => `
-            <div style="display:inline-flex; align-items:center; gap:10px; margin:5px 0;">
-                <span>${u.username}</span>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin:5px 0;">
+                <span class="player-name">${u.username}</span>
                 <img src="${characterGifs[u.character]}" 
-                style="display:inline-flex; width:40px; height:40px; border-radius:50%; object-fit:cover;"
+                style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
             </div>
         `).join("");
 });
@@ -238,6 +284,23 @@ function renderLobby() {
     };
 
     socket.on("error-msg", msg => alert(msg));
+
+    socket.on("vote-received", data => {
+    const log = document.createElement("div");
+    log.style.padding = "10px";
+    log.style.margin = "5px 0";
+    log.style.background = "#555";
+    log.style.borderRadius = "8px";
+    log.style.borderLeft = "5px solid red";
+    log.innerHTML = `<strong>${data.voter}</strong> votó a <strong>${data.target}</strong>`;
+    
+    // Insertar el aviso de voto arriba de la lista de usuarios
+    const list = document.getElementById("usersList");
+    list.parentNode.insertBefore(log, list);
+    
+    // Opcional: que el mensaje desaparezca a los 10 segundos
+    setTimeout(() => log.remove(), 10000);
+});
 }
 </script>
 </body>
