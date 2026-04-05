@@ -74,8 +74,6 @@ const characterGifs = {
     "Evita": "https://mir-s3-cdn-cf.behance.net/project_modules/hd/aa5b7381451879.5d0011880c9cd.gif",
     "Nicki": "https://mir-s3-cdn-cf.behance.net/project_modules/1400/6fbe43102775563.5f3ee348ee48e.gif",
     "Burlando": "https://mendozatoday.com.ar/wp-content/uploads/2024/06/burlando-estrella.gif"
-
-    
 };
 
 let selectedChar = "";
@@ -270,14 +268,21 @@ document.getElementById("voteBtn").onclick = () => {
     }
 
     socket.on("receive-role", data => {
-    // DESBLOQUEAR BOTÓN DE VOTAR
+    console.log("Rol recibido:", data); // Debug para confirmar que llega
+    
+    // 1. Activar botón de votar
     const vBtn = document.getElementById("voteBtn");
-    vBtn.disabled = false;
-    vBtn.style.background = "#ff4444";
-    vBtn.style.cursor = "pointer";
-    vBtn.style.opacity = "1";
+    if (vBtn) {
+        vBtn.disabled = false;
+        vBtn.style.background = "#ff4444";
+        vBtn.style.cursor = "pointer";
+        vBtn.style.opacity = "1";
+    }
 
+    // 2. Guardar en storage para persistencia
     localStorage.setItem("gameData", JSON.stringify(data));
+    
+    // 3. Mostrar en pantalla
     mostrarRol(data);
 });
 
