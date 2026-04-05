@@ -186,8 +186,8 @@ function renderLobby() {
         <div id="usersList">Cargando jugadores...</div>
         <div id="wordDisplay"></div>
         <button id="startBtn">INICIAR PARTIDA</button>
-        <button id="voteBtn" style="background:#ff4444;">VOTAR</button>
-        <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
+    <button id="voteBtn" disabled style="background:#666; cursor:not-allowed; opacity:0.6;">VOTAR</button>
+    <button id="logoutBtn" style="background:#666; margin-top:10px;">Cerrar Sesión</button>
     `;
 
   // Función para cerrar el modal
@@ -270,12 +270,29 @@ document.getElementById("voteBtn").onclick = () => {
     }
 
     socket.on("receive-role", data => {
-        localStorage.setItem("gameData", JSON.stringify(data));
-        mostrarRol(data);
-    });
+    // DESBLOQUEAR BOTÓN DE VOTAR
+    const vBtn = document.getElementById("voteBtn");
+    vBtn.disabled = false;
+    vBtn.style.background = "#ff4444";
+    vBtn.style.cursor = "pointer";
+    vBtn.style.opacity = "1";
 
-    const savedGame = localStorage.getItem("gameData");
-    if (savedGame) mostrarRol(JSON.parse(savedGame));
+    localStorage.setItem("gameData", JSON.stringify(data));
+    mostrarRol(data);
+});
+
+const savedGame = localStorage.getItem("gameData");
+if (savedGame) {
+    mostrarRol(JSON.parse(savedGame));
+    // Si hay un juego guardado, activamos el botón
+    const vBtn = document.getElementById("voteBtn");
+    if (vBtn) {
+        vBtn.disabled = false;
+        vBtn.style.background = "#ff4444";
+        vBtn.style.cursor = "pointer";
+        vBtn.style.opacity = "1";
+    }
+}
 
     document.getElementById("logoutBtn").onclick = () => {
         socket.emit("logout");
@@ -301,6 +318,7 @@ document.getElementById("voteBtn").onclick = () => {
     // Opcional: que el mensaje desaparezca a los 10 segundos
     setTimeout(() => log.remove(), 10000);
 });
+
 }
 </script>
 </body>
